@@ -154,9 +154,8 @@ footer{background:var(--kull);color:#a5a296;font-size:12.5px;line-height:1.6}
 
 <footer>
   <div class="bunn">
-    Blekker og sangtekster åpnes i Dropbox, og krever at du er logget inn som medlem av Musikkarkiv.<br>
-    Data hentes fra regnearkene ved hver innlasting. Google oppdaterer publiserte ark med noen
-    minutters forsinkelse, så helt ferske endringer kan mangle.
+    Blekker og sangtekster åpnes i Dropbox, og krever at du er medlem av Tøyen Musikklag i Dropbox.
+    Spør Matias dersom du trenger tilgang.
   </div>
 </footer>
 
@@ -307,8 +306,15 @@ function sondagInfo(iso){
     s.vokal.forEach(x=>vokal.push({...x,vikar:true}));
     s.instr.forEach(x=>instr.push({...x,vikar:true}));
   });
+  /* Kravet til et komplett band:
+     minst én som spiller piano eller gitar, og minst to vokalister.
+     Behovet regnes ut her — det skrives ikke i regnearket. */
+  const harHarmoni = instr.some(p=>/piano|gitar|keys|klaver/i.test(p.detalj));
+  const behov=[];
+  if(!harHarmoni) behov.push('piano eller gitar');
+  if(vokal.length<2) behov.push(vokal.length===0 ? '2 vokalister' : '1 vokalist til');
   return {
-    team:d.team||'—', behov:v.behov, vokal, instr,
+    team:d.team||'—', behov, vokal, instr,
     borte:roster.filter(([n])=>ute.includes(fornavn(n))),
     andreUte:listeAv(d.ikkeMed).filter(n=>!roster.some(([r])=>fornavn(r)===fornavn(n)))
   };
@@ -353,7 +359,7 @@ function tegnHvem(valgt){
         <div class="linje"><span class="nok">Vokal</span>${vis(i.vokal)||'<span class="ute">ingen</span>'}</div>
         <div class="linje"><span class="nok">Instrument</span>${vis(i.instr)||'<span class="ute">ingen</span>'}</div>
         ${alleUte.length?`<div class="linje ute"><span class="nok">Ikke med</span>${esc(alleUte.join(', '))}</div>`:''}
-        ${i.behov.length?`<div class="linje ute"><span class="nok">Mangler</span>${esc(i.behov.join(', '))}</div>`:''}
+        ${i.behov.length?`<div class="linje ute"><span class="nok">Trenger</span>${esc(i.behov.join(' · '))}</div>`:''}
       </div></div>`);
   }
   box.innerHTML=`<div class="kort">${rader.join('')||'<div class="tilstand">Ingen søndager.</div>'}</div>`;
@@ -394,7 +400,7 @@ function tegnDetalj(iso){
     + (p.vikar?'<span class="instr"> (vikar)</span>':'')).join(' · ');
   const v=[];
   if(d.ikkeMed) v.push(`<dt>Ikke med</dt><dd>${esc(d.ikkeMed)}</dd>`);
-  if(i.behov.length) v.push(`<dt>Mangler</dt><dd><span class="merk">${esc(i.behov.join(', '))}</span></dd>`);
+  if(i.behov.length) v.push(`<dt>Trenger</dt><dd><span class="merk">${esc(i.behov.join(' · '))}</span></dd>`);
   return `<div class="utfoldet">
     ${info.length?`<h3 class="etikett">Gudstjenesten</h3><dl>${info.map(([k,x])=>`<dt>${k}</dt><dd>${esc(x)}</dd>`).join('')}</dl>`:''}
     <h3 class="etikett">Besetning</h3>
