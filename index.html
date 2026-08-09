@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lovsang — Vitalkirken Tøyen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sand:#f0ecd9; --kull:#383838; --grus:#939288; --strek:#d8d3bd;
+  --papir:#fffefa; --rust:#8a5a2b; --rust-lys:#f3e6d4;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--sand);color:var(--kull);
+  font:400 16px/1.6 "Work Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+
+header{background:var(--kull);color:var(--sand)}
+.topp{max-width:840px;margin:0 auto;padding:16px 18px 0;display:flex;align-items:center;gap:14px}
+.logo{height:30px;width:auto;display:block;flex:0 0 auto}
+.merke h1{margin:0;font-size:15px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.merke p{margin:1px 0 0;font-size:12.5px;color:#b6b3a4;letter-spacing:.03em}
+nav{max-width:840px;margin:14px auto 0;padding:0 18px;display:flex;gap:26px}
+nav button{background:none;border:0;padding:0 0 11px;cursor:pointer;
+  font:500 14px/1 "Work Sans",sans-serif;letter-spacing:.03em;color:#a5a296;
+  border-bottom:2px solid transparent}
+nav button.on{color:var(--sand);border-bottom-color:var(--sand)}
+main{max-width:840px;margin:0 auto;padding:24px 18px 72px}
+
+.kort{background:var(--papir);border:1px solid var(--strek)}
+h3.etikett{margin:0 0 9px;font-size:10.5px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--grus)}
+h3.etikett:not(:first-child){margin-top:22px}
+.dato{flex:0 0 50px;line-height:1.05}
+.dato b{display:block;font-size:26px;font-weight:600;letter-spacing:-.02em}
+.dato span{font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--grus)}
+.merk{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;padding:3px 8px;background:var(--rust-lys);color:var(--rust);
+  margin-left:8px;vertical-align:2px}
+.meg{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;padding:3px 8px;background:var(--kull);color:var(--sand);
+  margin-left:8px;vertical-align:1px}
+.mangler{color:var(--rust)}
+
+/* filtre */
+.filtre{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.felt{flex:1;min-width:150px}
+.felt label{display:block;font-size:10.5px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--grus);margin-bottom:5px}
+.felt select{width:100%;padding:10px 12px;background:var(--papir);color:var(--kull);
+  border:1px solid var(--strek);border-radius:0;font:400 15px "Work Sans",sans-serif}
+.nullstill{background:none;border:0;color:var(--kull);font:500 13px "Work Sans",sans-serif;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0;margin-bottom:14px}
+.treff{font-size:13px;color:var(--grus);margin:0 0 10px}
+
+.oppsum{background:var(--kull);color:var(--sand);padding:13px 16px;margin-bottom:14px;
+  font-size:14.5px;font-weight:500}
+.rad{display:flex;gap:16px;padding:15px 16px;border-bottom:1px solid var(--strek)}
+.rad:last-child{border-bottom:0}
+.rad.min{background:#fbf8ec;box-shadow:inset 3px 0 0 var(--kull)}
+.rad .innhold{flex:1;min-width:0}
+.lag{font-size:14px;font-weight:600;margin-bottom:5px}
+.linje{font-size:14px;line-height:1.7}
+.linje .nok{display:inline-block;min-width:88px;font-size:10.5px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--grus)}
+.instr{color:var(--grus);font-size:13px}
+.ute{color:var(--rust)}
+
+.sund{display:flex;align-items:center;gap:16px;padding:15px 16px;cursor:pointer}
+.sund:hover{background:#faf7ea}
+.sund .midt{flex:1;min-width:0}
+.sund .midt .a{font-weight:600;font-size:14.5px}
+.sund .midt .b{font-size:13px;color:var(--grus);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.teller{flex:0 0 auto;min-width:30px;text-align:center;font-size:13px;font-weight:600;
+  padding:4px 9px;border:1px solid var(--strek);background:var(--sand)}
+.teller.tom{color:#b3b0a2;border-style:dashed}
+.utfoldet{border-top:1px solid var(--strek);padding:18px 16px;background:#fdfbf2}
+dl{display:grid;grid-template-columns:auto 1fr;gap:5px 18px;margin:0;font-size:14.5px}
+dt{color:var(--grus);font-size:13px}
+dd{margin:0}
+ul.folk{list-style:none;margin:0;padding:0;font-size:14.5px}
+ul.folk li{padding:3px 0}
+ol.sanger{list-style:none;margin:0;padding:0}
+ol.sanger li{padding:11px 0;border-bottom:1px solid var(--strek)}
+ol.sanger li:last-child{border-bottom:0}
+.plass{font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--grus)}
+.tittel{font-weight:600;font-size:15.5px}
+.filer{font-size:13px;color:var(--grus);margin-top:4px;line-height:1.8}
+.filer a{color:var(--kull);font-weight:600;text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
+.filnavn{font-size:12px;color:#a3a094}
+
+.tilstand{padding:30px 16px;text-align:center;color:var(--grus);font-size:14px}
+.varsel{background:var(--rust-lys);border-left:3px solid var(--rust);color:var(--rust);
+  padding:13px 15px;font-size:13.5px;line-height:1.6;margin-bottom:16px}
+footer{background:var(--kull);color:#a5a296;font-size:12.5px;line-height:1.6}
+.bunn{max-width:840px;margin:0 auto;padding:22px 18px 30px}
+.skjult{display:none}
+@media (max-width:520px){ nav{gap:18px} .felt{min-width:130px} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="topp">
+    <img class="logo" alt="Vitalkirken"
+         src="https://d1nizz91i54auc.cloudfront.net/_service/502497/display/img_version/8116427/t/1692265670/img_name/68193_502497_dff736e467.png.webp">
+    <div class="merke">
+      <h1>Lovsang · Tøyen</h1>
+      <p>Høsten 2026</p>
+    </div>
+  </div>
+  <nav>
+    <button id="tab-who" class="on">Hvem spiller</button>
+    <button id="tab-set">Set-liste</button>
+  </nav>
+</header>
+
+<main>
+  <div id="banner"></div>
+
+  <section id="view-who">
+    <div class="filtre">
+      <div class="felt">
+        <label for="person">Vis søndager for</label>
+        <select id="person"><option value="">alle</option></select>
+      </div>
+    </div>
+    <div id="mine"></div>
+    <div id="wholist"><div class="tilstand">Henter data …</div></div>
+  </section>
+
+  <section id="view-set" class="skjult">
+    <div class="filtre">
+      <div class="felt">
+        <label for="f-dato">Dato</label>
+        <select id="f-dato"><option value="">alle</option></select>
+      </div>
+      <div class="felt">
+        <label for="f-team">Team</label>
+        <select id="f-team"><option value="">alle</option></select>
+      </div>
+      <div class="felt">
+        <label for="f-medlem">Medlem</label>
+        <select id="f-medlem"><option value="">alle</option></select>
+      </div>
+    </div>
+    <button class="nullstill" id="nullstill">Nullstill filtre</button>
+    <p class="treff" id="treff"></p>
+    <div id="setlist"><div class="tilstand">Henter data …</div></div>
+  </section>
+</main>
+
+<footer>
+  <div class="bunn">
+    Blekker og sangtekster åpnes i Dropbox, og krever at du er logget inn som medlem av Musikkarkiv.<br>
+    Data hentes fra regnearkene ved hver innlasting. Google oppdaterer publiserte ark med noen
+    minutters forsinkelse, så helt ferske endringer kan mangle.
+  </div>
+</footer>
+
+<script>
+/* ============================================================ KILDER ===== */
+const PUB = {
+  sangbank: '2PACX-1vRAs0b8p_RYdUJr2F6HBmV6UtDmsMYXd_JwEZewzSBoO6YzsPZG9H-7FPXe_cBi0eF6xFeqGhDhrB9W',
+  team:     '2PACX-1vT3fv78fzEtaMOYjM0S6-Rv5fD4SEnFzkl2rZ9Ntdu9m6yofdh31FsIGU1-Kniqaf_Ws42MiclB1KW6',
+  gudstj:   '2PACX-1vS4P1RLnM3L66LY3sVpj86wwtNBiCpamgU2Fmvi1U4vHu2gi3QMw8v_6h-8zo3-Gi5aQcsBbrf66LsV'
+};
+const GID = { kategorisert:'1004838110', sangvalg:'1143768032',
+              datoer:'0', team:'1528204797', gudstj:'1876475127' };
+const csvUrl = (pub,gid) =>
+  `https://docs.google.com/spreadsheets/d/e/${pub}/pub?gid=${gid}&single=true&output=csv`;
+
+/* Delingslenkene til de to Dropbox-mappene. Begge står på «Only people invited»,
+   så de virker bare for medlemmer av Musikkarkiv. Blir lenkene regenerert,
+   er det bare disse to strengene som må byttes. */
+const MAPPE = {
+  tekst:  'https://www.dropbox.com/scl/fo/vunwkl534as0cvoi5hv7g/AE0g3vxie4NUgG-4f0DsKiQ?rlkey=arthcpeg196157qivkynhfxzv&dl=0',
+  blekke: 'https://www.dropbox.com/scl/fo/sapbkukooess8kkfx6s2b/AN6tmxn4fG-DI_SlEfMHPAE?rlkey=ohbjdnkkskrw5jyo01kbgocn2&dl=0'
+};
+const filUrl = (mappe, filnavn) =>
+  mappe + '&preview=' + encodeURIComponent(filnavn).replace(/[()!'*]/g,
+    c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+
+let TEAMS = {};
+
+/* ======================================================= HJELPEFUNK. ===== */
+function parseCsv(text){
+  const rows=[]; let row=[], cell='', q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; } else cell+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(cell); cell=''; }
+    else if(c==='\n'){ row.push(cell); rows.push(row); row=[]; cell=''; }
+    else if(c!=='\r') cell+=c;
+  }
+  if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+  return rows.map(r=>r.map(v=>v.trim()));
+}
+const MND={jan:1,feb:2,mar:3,apr:4,mai:5,jun:6,jul:7,aug:8,sep:9,okt:10,nov:11,des:12};
+const pad=n=>String(n).padStart(2,'0');
+function normDate(s,år){
+  if(!s) return null; s=String(s).trim(); let m;
+  if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})/))) return `${m[1]}-${m[2]}-${m[3]}`;
+  if((m=s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})$/))) return `${m[3]}-${pad(+m[2])}-${pad(+m[1])}`;
+  if((m=s.match(/^(\d{1,2})\.\s*([a-zæøå]{3})/i))){
+    const mn=MND[m[2].toLowerCase().slice(0,3)];
+    if(mn) return `${år||2026}-${pad(mn)}-${pad(+m[1])}`;
+  }
+  return null;
+}
+const MNDNAVN=['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
+function visDato(iso){
+  const [y,m,d]=iso.split('-').map(Number);
+  return {dag:d, mnd:MNDNAVN[m-1].slice(0,3), lang:`${d}. ${MNDNAVN[m-1]}`};
+}
+const normTitle=s=>(s||'').toLowerCase().replace(/[’'`]/g,'')
+  .replace(/[^a-z0-9æøåäöé ]/g,' ').replace(/\s+/g,' ').trim();
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const renskMerknad=s=>!s?'':(/d[åa]p/i.test(s)?'Dåp':s);
+
+/* ============================================================== DATA ===== */
+const DATA={sanger:new Map(),sangvalg:new Map(),datoer:new Map(),gudstj:new Map(),datoliste:[]};
+
+function byggSangbank(rows){
+  for(const r of rows.slice(1)){
+    if(!r[2]) continue;
+    DATA.sanger.set(normTitle(r[2]),{tittel:r[2],tekstfil:r[8]||'',blekkefil:r[9]||''});
+  }
+}
+function byggSangvalg(rows){
+  if(!rows.length) return;
+  const head=rows[0];
+  for(let c=1;c<head.length;c++){
+    const iso=normDate(head[c]); if(!iso) continue;
+    const liste=[];
+    for(let r=1;r<rows.length;r++)
+      if(rows[r][c]) liste.push({slot:rows[r][0]||`Sang ${r}`,tittel:rows[r][c]});
+    DATA.sangvalg.set(iso,liste);
+  }
+}
+function byggDatoer(rows){
+  for(const r of rows.slice(1)){
+    const iso=normDate(r[4])||normDate(r[0]); if(!iso) continue;
+    DATA.datoer.set(iso,{team:(r[1]||'').trim(),ikkeMed:(r[2]||'').trim(),vikar:(r[3]||'').trim()});
+  }
+}
+/** Team-arket: Team | Vokal 1 | Vokal 2 | Piano | Gitar | Bass | Trommer | Annet */
+function byggTeam(rows){
+  if(rows.length<2) return;
+  const head=rows[0], ny={};
+  for(const r of rows.slice(1)){
+    const nr=(r[0]||'').trim(); if(!nr) continue;
+    const folk=[];
+    for(let c=1;c<head.length;c++){
+      if((head[c]||'').trim() && (r[c]||'').trim()) folk.push([r[c].trim(), head[c].trim()]);
+    }
+    if(folk.length) ny[nr]=folk;
+  }
+  if(Object.keys(ny).length) TEAMS=ny;
+}
+function byggGudstj(rows){
+  for(const r of rows.slice(1)){
+    const iso=normDate(r[1]); if(!iso) continue;
+    DATA.gudstj.set(iso,{kl:r[2]||'',tema:r[5]||'',taler:r[6]||'',
+      moteleder:r[8]||'',merknad:renskMerknad(r[14])});
+  }
+}
+
+/* ====================================================== BESETNINGEN ===== */
+const rosterFor = t => TEAMS[t] || TEAMS[(t||'').replace(/^Team\s*/i,'')] || [];
+const listeAv   = s => (s||'').split(/[,;]/).map(x=>x.trim()).filter(Boolean);
+const fornavn   = n => (n||'').trim().split(/\s+/)[0].toLowerCase();
+
+function delRolle(navn, rolle){
+  const vokal=[], instr=[];
+  (rolle||'').split('/').map(s=>s.trim()).filter(Boolean).forEach(del=>{
+    if(/vokal|sang/i.test(del)) vokal.push({navn, detalj:/leder/i.test(del)?'leder':''});
+    else instr.push({navn, detalj:del.replace(/\(.*?\)/g,'').trim().toLowerCase()});
+  });
+  if(!vokal.length && !instr.length) instr.push({navn, detalj:''});
+  return {vokal, instr};
+}
+/** Vikarfeltet: enten et behov («Trenger vikar (vokal)») eller navn («Rikard (gitar)»). */
+function lesVikar(tekst){
+  const behov=[], folk=[];
+  listeAv(tekst).forEach(del=>{
+    if(/^trenger/i.test(del)){ behov.push(del); return; }
+    const m=del.match(/^(.+?)\s*\((.+?)\)\s*$/);
+    if(m) folk.push({navn:m[1].trim(), rolle:m[2].trim()});
+    else if(del) folk.push({navn:del, rolle:''});
+  });
+  return {behov, folk};
+}
+function sondagInfo(iso){
+  const d=DATA.datoer.get(iso)||{};
+  const roster=rosterFor(d.team);
+  const ute=listeAv(d.ikkeMed).map(fornavn);
+  const spiller=roster.filter(([n])=>!ute.includes(fornavn(n)));
+  const vokal=[], instr=[];
+  spiller.forEach(([n,r])=>{ const s=delRolle(n,r); vokal.push(...s.vokal); instr.push(...s.instr); });
+  const v=lesVikar(d.vikar);
+  v.folk.forEach(p=>{
+    const s=delRolle(p.navn,p.rolle||'Annet');
+    s.vokal.forEach(x=>vokal.push({...x,vikar:true}));
+    s.instr.forEach(x=>instr.push({...x,vikar:true}));
+  });
+  return {
+    team:d.team||'—', behov:v.behov, vokal, instr,
+    borte:roster.filter(([n])=>ute.includes(fornavn(n))),
+    andreUte:listeAv(d.ikkeMed).filter(n=>!roster.some(([r])=>fornavn(r)===fornavn(n)))
+  };
+}
+function allePersoner(){
+  const m=new Map();
+  Object.values(TEAMS).forEach(r=>r.forEach(([n])=>m.set(fornavn(n),n)));
+  DATA.datoer.forEach(d=>lesVikar(d.vikar).folk.forEach(p=>{
+    if(!m.has(fornavn(p.navn))) m.set(fornavn(p.navn),p.navn);
+  }));
+  return [...m.values()].sort((a,b)=>a.localeCompare(b,'nb'));
+}
+const spillerPa = (iso,f) => {
+  const i=sondagInfo(iso);
+  return [...i.vokal,...i.instr].some(p=>fornavn(p.navn)===f);
+};
+
+/* ================================================== HVEM SPILLER NÅR ===== */
+function tegnHvem(valgt){
+  const box=document.getElementById('wholist'), sum=document.getElementById('mine');
+  if(!DATA.datoliste.length){ box.innerHTML=`<div class="tilstand">Fant ingen datoer.</div>`; return; }
+  const rader=[]; let mine=0;
+  for(const iso of DATA.datoliste){
+    const i=sondagInfo(iso);
+    const spillerNå = valgt && spillerPa(iso,valgt);
+    const uteNå = valgt && (i.borte.some(([n])=>fornavn(n)===valgt)
+                          || i.andreUte.some(n=>fornavn(n)===valgt));
+    if(valgt && !spillerNå && !uteNå) continue;
+    if(spillerNå) mine++;
+    const v=visDato(iso);
+    const vis = liste => liste.map(p=>{
+      const meg = valgt && fornavn(p.navn)===valgt;
+      return `${esc(p.navn)}${p.detalj?` <span class="instr">${esc(p.detalj)}</span>`:''}`
+           + (p.vikar?'<span class="instr"> (vikar)</span>':'')
+           + (meg?'<span class="meg">deg</span>':'');
+    }).join(' · ');
+    const alleUte=[...i.borte.map(([n])=>n), ...i.andreUte];
+    rader.push(`<div class="rad ${spillerNå?'min':''}">
+      <div class="dato"><b>${v.dag}</b><span>${v.mnd}</span></div>
+      <div class="innhold">
+        <div class="lag">${esc(i.team)}</div>
+        <div class="linje"><span class="nok">Vokal</span>${vis(i.vokal)||'<span class="ute">ingen</span>'}</div>
+        <div class="linje"><span class="nok">Instrument</span>${vis(i.instr)||'<span class="ute">ingen</span>'}</div>
+        ${alleUte.length?`<div class="linje ute"><span class="nok">Ikke med</span>${esc(alleUte.join(', '))}</div>`:''}
+        ${i.behov.length?`<div class="linje ute"><span class="nok">Mangler</span>${esc(i.behov.join(', '))}</div>`:''}
+      </div></div>`);
+  }
+  box.innerHTML=`<div class="kort">${rader.join('')||'<div class="tilstand">Ingen søndager.</div>'}</div>`;
+  sum.innerHTML = valgt
+    ? `<div class="oppsum">${esc(allePersoner().find(n=>fornavn(n)===valgt)||valgt)} spiller ${mine} ${mine===1?'søndag':'søndager'} i høst.</div>`
+    : '';
+}
+
+/* ========================================================= SET-LISTE ===== */
+function fil(navn,mappe,hva){
+  if(!navn) return `<span class="mangler">${hva} mangler i arkivet</span>`;
+  return `<a href="${filUrl(mappe,navn)}" target="_blank" rel="noopener">${hva} ↗</a>`
+       + ` <span class="filnavn">${esc(navn)}</span>`;
+}
+function tegnSanger(iso){
+  const valg=DATA.sangvalg.get(iso);
+  if(!valg||!valg.length) return `<p class="tilstand" style="padding:10px 0">Ingen sanger lagt inn ennå.</p>`;
+  return `<ol class="sanger">`+valg.map(v=>{
+    const s=DATA.sanger.get(normTitle(v.tittel));
+    const files=s ? fil(s.blekkefil,MAPPE.blekke,'Blekke')+'<br>'+fil(s.tekstfil,MAPPE.tekst,'Sangtekst')
+                  : `<span class="mangler">Står ikke i sangbanken — sjekk skrivemåten</span>`;
+    return `<li><div class="plass">${esc(v.slot)}</div>
+      <div class="tittel">${esc(v.tittel)}</div>
+      <div class="filer">${files}</div></li>`;
+  }).join('')+`</ol>`;
+}
+function tegnDetalj(iso){
+  const g=DATA.gudstj.get(iso)||{}, d=DATA.datoer.get(iso)||{};
+  const i=sondagInfo(iso);
+  const info=[];
+  if(g.tema) info.push(['Tema',g.tema]);
+  if(g.taler) info.push(['Taler',g.taler]);
+  if(g.moteleder) info.push(['Møteleder',g.moteleder]);
+  if(g.kl) info.push(['Klokken',g.kl]);
+  if(g.merknad) info.push(['Merknad',g.merknad]);
+  const linje = liste => liste.map(p=>
+    `${esc(p.navn)}${p.detalj?` <span class="instr">${esc(p.detalj)}</span>`:''}`
+    + (p.vikar?'<span class="instr"> (vikar)</span>':'')).join(' · ');
+  const v=[];
+  if(d.ikkeMed) v.push(`<dt>Ikke med</dt><dd>${esc(d.ikkeMed)}</dd>`);
+  if(i.behov.length) v.push(`<dt>Mangler</dt><dd><span class="merk">${esc(i.behov.join(', '))}</span></dd>`);
+  return `<div class="utfoldet">
+    ${info.length?`<h3 class="etikett">Gudstjenesten</h3><dl>${info.map(([k,x])=>`<dt>${k}</dt><dd>${esc(x)}</dd>`).join('')}</dl>`:''}
+    <h3 class="etikett">Besetning</h3>
+    <dl><dt>Vokal</dt><dd>${linje(i.vokal)||'—'}</dd>
+        <dt>Instrument</dt><dd>${linje(i.instr)||'—'}</dd>${v.join('')}</dl>
+    <h3 class="etikett">Sanger</h3>${tegnSanger(iso)}</div>`;
+}
+function tegnSetliste(){
+  const fDato=document.getElementById('f-dato').value;
+  const fTeam=document.getElementById('f-team').value;
+  const fMed =document.getElementById('f-medlem').value;
+  const el=document.getElementById('setlist');
+  const treff=DATA.datoliste.filter(iso=>{
+    if(fDato && iso!==fDato) return false;
+    if(fTeam && (DATA.datoer.get(iso)||{}).team!==fTeam) return false;
+    if(fMed && !spillerPa(iso,fMed)) return false;
+    return true;
+  });
+  document.getElementById('treff').textContent =
+    treff.length===DATA.datoliste.length
+      ? `${treff.length} søndager`
+      : `${treff.length} av ${DATA.datoliste.length} søndager`;
+  if(!treff.length){ el.innerHTML=`<div class="kort"><div class="tilstand">Ingen søndager passer filtrene.</div></div>`; return; }
+  el.innerHTML=treff.map(iso=>{
+    const v=visDato(iso), d=DATA.datoer.get(iso)||{}, g=DATA.gudstj.get(iso)||{};
+    const n=(DATA.sangvalg.get(iso)||[]).length;
+    const under=[g.tema,n?`${n} sanger`:'ingen sanger'].filter(Boolean).join(' · ');
+    return `<div class="kort" data-iso="${iso}" style="margin-top:-1px"><div class="sund">
+      <div class="dato"><b>${v.dag}</b><span>${v.mnd}</span></div>
+      <div class="midt">
+        <div class="a">${esc(d.team||'—')}</div>
+        <div class="b">${esc(under)}</div>
+      </div>
+      <div class="teller ${n?'':'tom'}">${n}</div>
+    </div></div>`;
+  }).join('');
+  el.querySelectorAll('.kort').forEach(k=>{
+    k.querySelector('.sund').addEventListener('click',()=>{
+      const åpen=k.querySelector('.utfoldet');
+      if(åpen){ åpen.remove(); return; }
+      el.querySelectorAll('.utfoldet').forEach(x=>x.remove());
+      k.insertAdjacentHTML('beforeend',tegnDetalj(k.dataset.iso));
+    });
+  });
+  // åpne automatisk når filteret peker på én enkelt søndag
+  if(treff.length===1){
+    const k=el.querySelector('.kort');
+    k.insertAdjacentHTML('beforeend',tegnDetalj(treff[0]));
+  }
+}
+
+/* ============================================================ FILTRE ===== */
+function fyllFiltre(){
+  const pers=allePersoner();
+  const sel=document.getElementById('person');
+  pers.forEach(n=>{ const o=document.createElement('option');
+    o.value=fornavn(n); o.textContent=n; sel.appendChild(o); });
+  sel.addEventListener('change',e=>tegnHvem(e.target.value));
+
+  const fd=document.getElementById('f-dato');
+  DATA.datoliste.forEach(iso=>{ const o=document.createElement('option');
+    o.value=iso; o.textContent=visDato(iso).lang; fd.appendChild(o); });
+
+  const ft=document.getElementById('f-team');
+  [...new Set(DATA.datoliste.map(i=>(DATA.datoer.get(i)||{}).team).filter(Boolean))]
+    .sort().forEach(t=>{ const o=document.createElement('option');
+      o.value=t; o.textContent=t; ft.appendChild(o); });
+
+  const fm=document.getElementById('f-medlem');
+  pers.forEach(n=>{ const o=document.createElement('option');
+    o.value=fornavn(n); o.textContent=n; fm.appendChild(o); });
+
+  ['f-dato','f-team','f-medlem'].forEach(id=>
+    document.getElementById(id).addEventListener('change',tegnSetliste));
+  document.getElementById('nullstill').addEventListener('click',()=>{
+    ['f-dato','f-team','f-medlem'].forEach(id=>document.getElementById(id).value='');
+    tegnSetliste();
+  });
+}
+
+/* ============================================================= START ===== */
+async function hent(url){
+  const r=await fetch(url);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return parseCsv(await r.text());
+}
+async function start(){
+  const jobber=[
+    ['sangbanken',   csvUrl(PUB.sangbank,GID.kategorisert), byggSangbank],
+    ['sangvalget',   csvUrl(PUB.sangbank,GID.sangvalg),     byggSangvalg],
+    ['turnusen',     csvUrl(PUB.team,GID.datoer),           byggDatoer],
+    ['teamene',      csvUrl(PUB.team,GID.team),             byggTeam],
+    ['gudstjenester',csvUrl(PUB.gudstj,GID.gudstj),         byggGudstj]
+  ];
+  const feil=[];
+  for(const [navn,url,fn] of jobber){
+    try{ fn(await hent(url)); }catch(e){ feil.push(navn); }
+  }
+  if(feil.length){
+    document.getElementById('banner').innerHTML =
+      `<div class="varsel"><b>Fikk ikke hentet ${feil.join(', ')}.</b>
+       Sjekk at regnearkene fortsatt er publisert på nettet. Åpner du denne fila direkte
+       fra maskinen i stedet for fra en nettadresse, blokkerer nettleseren henting av data.</div>`;
+  }
+  DATA.datoliste=[...new Set([...DATA.datoer.keys(),...DATA.sangvalg.keys()])].sort();
+  fyllFiltre();
+  tegnHvem('');
+  tegnSetliste();
+}
+
+const FANER=[['tab-who','view-who'],['tab-set','view-set']];
+FANER.forEach(([knapp,visning])=>{
+  document.getElementById(knapp).onclick=()=>{
+    FANER.forEach(([k,v])=>{
+      document.getElementById(k).classList.toggle('on',k===knapp);
+      document.getElementById(v).classList.toggle('skjult',v!==visning);
+    });
+  };
+});
+start();
+</script>
+</body>
+</html>
