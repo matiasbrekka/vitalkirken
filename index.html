@@ -380,10 +380,25 @@ function sondagInfo(iso){
     s.vokal.forEach(x=>vokal.push({...x,vikar:true}));
     s.instr.forEach(x=>instr.push({...x,vikar:true}));
   });
+  /* Kristoffer gjør bare én ting om gangen: enten vokal eller piano.
+     Mangler bandet piano/gitar, settes han på piano — og faller
+     dermed ut av vokalrekka, slik at behovet der blir synlig. */
+  const erHarmoni = p => /piano|gitar|keys|klaver/i.test(p.detalj);
+  const erK = p => fornavn(p.navn)==='kristoffer';
+  if(!instr.some(erHarmoni)){
+    const iv = vokal.findIndex(erK);
+    if(iv>-1){
+      const k = vokal.splice(iv,1)[0];
+      if(!instr.some(erK)) instr.push({navn:k.navn, detalj:'piano', vikar:k.vikar});
+    }
+  } else if(instr.some(erK)){
+    const iv = vokal.findIndex(erK);
+    if(iv>-1) vokal.splice(iv,1);
+  }
   /* Kravet til et komplett band:
      minst én som spiller piano eller gitar, og minst to vokalister.
      Behovet regnes ut her — det skrives ikke i regnearket. */
-  const harHarmoni = instr.some(p=>/piano|gitar|keys|klaver/i.test(p.detalj));
+  const harHarmoni = instr.some(erHarmoni);
   const behov=[];
   if(!harHarmoni) behov.push('piano eller gitar');
   if(vokal.length<2) behov.push(vokal.length===0 ? '2 vokalister' : '1 vokalist til');
