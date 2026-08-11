@@ -89,6 +89,11 @@ ol.sanger li{padding:11px 0;border-bottom:1px solid var(--strek)}
 ol.sanger li:last-child{border-bottom:0}
 .plass{font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--grus)}
 .tittel{font-weight:600;font-size:15.5px}
+.knapperad{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 14px}
+.lastned{font:inherit;font-size:12.5px;font-weight:600;letter-spacing:.01em;
+  background:var(--kull);color:var(--sand);border:0;padding:9px 15px;cursor:pointer}
+.lastned:hover{background:#000}
+.lastned:disabled{opacity:.5;cursor:default}
 .filer{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--grus);margin-top:5px}
 .filer a{color:var(--kull);font-weight:600;text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
 
@@ -470,10 +475,47 @@ function fil(navn,hvor,hva){
   if(!navn) return `<span class="mangler">${hva} mangler</span>`;
   return `<a href="${filUrl(hvor,navn)}" target="_blank" rel="noopener">${hva} ↗</a>`;
 }
+/** Filnavnene for én søndag, i rekkefølge og uten duplikater. */
+function samleFiler(iso, hvor){
+  const ut=[];
+  (DATA.sangvalg.get(iso)||[]).forEach(v=>{
+    const s=DATA.sanger.get(normTitle(v.tittel)); if(!s) return;
+    const navn = hvor==='blekke' ? s.blekkefil : s.tekstfil;
+    if(navn && !ut.includes(navn)) ut.push(navn);
+  });
+  return ut;
+}
+/* Nedlasting skjer i skjulte rammer, én fil om gangen. Dropbox svarer med
+   selve fila (dl=1), så nettleseren laster den ned uten å forlate siden.
+   Er du ikke logget inn i Dropbox, skjer det ingenting — da må du åpne
+   lenkene under i stedet. */
+window.lastNedAlle = function(knapp, iso, hvor){
+  const filer = samleFiler(iso, hvor);
+  if(!filer.length) return;
+  const tekst = knapp.dataset.tekst || knapp.textContent;
+  knapp.dataset.tekst = tekst;
+  knapp.disabled = true;
+  filer.forEach((navn,k)=>setTimeout(()=>{
+    const ram = document.createElement('iframe');
+    ram.style.display = 'none';
+    ram.src = filUrl(hvor,navn).replace('dl=0','dl=1');
+    document.body.appendChild(ram);
+    setTimeout(()=>ram.remove(), 90000);
+    knapp.textContent = `Laster ned … ${k+1} av ${filer.length}`;
+    if(k===filer.length-1) setTimeout(()=>{
+      knapp.textContent = tekst; knapp.disabled = false;
+    }, 2000);
+  }, k*800));
+};
 function tegnSanger(iso){
   const valg=DATA.sangvalg.get(iso);
   if(!valg||!valg.length) return `<p class="tilstand" style="padding:10px 0">Ingen sanger lagt inn ennå.</p>`;
-  return `<ol class="sanger">`+valg.map(v=>{
+  const knapper = [['tekst','tekster'],['blekke','blekker']].map(([hvor,ord])=>{
+    const n = samleFiler(iso,hvor).length;
+    return n ? `<button class="lastned" onclick="lastNedAlle(this,'${iso}','${hvor}')">Last ned alle ${ord} (${n})</button>` : '';
+  }).join('');
+  return (knapper ? `<div class="knapperad">${knapper}</div>` : '')
+    + `<ol class="sanger">`+valg.map(v=>{
     const s=DATA.sanger.get(normTitle(v.tittel));
     const files=s ? fil(s.tekstfil,'tekst','Sangtekst')+fil(s.blekkefil,'blekke','Blekke')
                   : `<span class="mangler">Står ikke i sangbanken — sjekk skrivemåten</span>`;
