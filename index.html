@@ -90,6 +90,8 @@ ol.sanger li{padding:11px 0;border-bottom:1px solid var(--strek)}
 ol.sanger li:last-child{border-bottom:0}
 .plass{font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--grus)}
 .tittel{font-weight:600;font-size:15.5px}
+.toneart{display:inline-block;margin-left:10px;padding:2px 8px;background:var(--kull);
+  color:var(--sand);font-size:11.5px;font-weight:600;letter-spacing:.04em;vertical-align:2px}
 .knapperad{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 14px}
 .lastned{font:inherit;font-size:12.5px;font-weight:600;letter-spacing:.01em;
   background:var(--kull);color:var(--sand);border:0;padding:9px 15px;cursor:pointer}
@@ -305,7 +307,9 @@ const DATA={sanger:new Map(),sangvalg:new Map(),datoer:new Map(),gudstj:new Map(
 function byggSangbank(rows){
   for(const r of rows.slice(1)){
     if(!r[2]) continue;
-    DATA.sanger.set(normTitle(r[2]),{tittel:r[2],tekstfil:r[8]||'',blekkefil:r[9]||''});
+    /* L = Toneart, M = Tempo — hentet fra blekkene, kan overstyres i arket. */
+    DATA.sanger.set(normTitle(r[2]),{tittel:r[2],tekstfil:r[8]||'',blekkefil:r[9]||'',
+                                     toneart:(r[11]||'').trim(), tempo:(r[12]||'').trim()});
   }
 }
 function byggSangvalg(rows){
@@ -591,8 +595,11 @@ function tegnSanger(iso){
     const s=DATA.sanger.get(normTitle(v.tittel));
     const files=s ? fil(s.tekstfil,'tekst','Sangtekst')+fil(s.blekkefil,'blekke','Blekke')
                   : `<span class="mangler">Står ikke i sangbanken — sjekk skrivemåten</span>`;
+    const merk=[];
+    if(s&&s.toneart) merk.push(esc(s.toneart));
+    if(s&&s.tempo)   merk.push(esc(s.tempo)+' bpm');
     return `<li><div class="plass">${esc(v.slot)}</div>
-      <div class="tittel">${esc(v.tittel)}</div>
+      <div class="tittel">${esc(v.tittel)}${merk.length?`<span class="toneart">${merk.join(' · ')}</span>`:''}</div>
       <div class="filer">${files}</div></li>`;
   }).join('')+`</ol>`;
 }
