@@ -406,7 +406,7 @@ function sondagInfo(iso){
   const harHarmoni = instr.some(erHarmoni);
   const behov=[];
   if(!harHarmoni) behov.push('piano eller gitar');
-  if(vokal.length<2) behov.push(vokal.length===0 ? '2 vokalister' : '1 vokalist til');
+  if(vokal.length<2) behov.push(vokal.length===0 ? '2 vokalister' : 'vokal');
   return {
     team:d.team||'—', behov, vokal, instr,
     borte:roster.filter(([n])=>ute.includes(fornavn(n))),
