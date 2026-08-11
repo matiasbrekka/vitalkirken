@@ -483,8 +483,7 @@ function tegnDetalj(iso){
   const linje = liste => liste.map(p=>
     `${esc(p.navn)}${p.detalj?` <span class="instr">${esc(p.detalj)}</span>`:''}`
     + (p.vikar && !F.has(fornavn(p.navn)) ? '<span class="instr"> (vikar)</span>':'')).join(' · ');
-  const v=[];
-  if(i.behov.length) v.push(`<dt>Trenger</dt><dd><span class="merk">${esc(i.behov.join(' · '))}</span></dd>`);
+  const v=[];   // vikarbehov vises i «Hvem spiller», ikke her
   return `<div class="utfoldet">
     ${info.length?`<h3 class="etikett">Gudstjenesten</h3><dl>${info.map(([k,x])=>`<dt>${k}</dt><dd>${esc(x)}</dd>`).join('')}</dl>`:''}
     <h3 class="etikett">Besetning</h3>
