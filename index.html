@@ -62,9 +62,11 @@ h3.etikett:not(:first-child){margin-top:22px}
 .rad.min{background:#fbf8ec;box-shadow:inset 3px 0 0 var(--kull)}
 .rad .innhold{flex:1;min-width:0}
 .lag{font-size:14px;font-weight:600;margin-bottom:5px}
-.linje{font-size:14px;line-height:1.7}
-.linje .nok{display:inline-block;min-width:88px;font-size:10.5px;font-weight:600;
+.linje{font-size:14px;line-height:1.7;display:flex;gap:10px;align-items:baseline}
+.linje .nok{flex:0 0 84px;font-size:10.5px;font-weight:600;
   letter-spacing:.12em;text-transform:uppercase;color:var(--grus)}
+.verdier{flex:1;min-width:0}
+.verdier .p + .p::before{content:'·';color:var(--grus);margin:0 6px}
 .instr{color:var(--grus);font-size:13px}
 .ute{color:var(--rust)}
 
@@ -97,7 +99,13 @@ ol.sanger li:last-child{border-bottom:0}
 footer{background:var(--kull);color:#a5a296;font-size:12.5px;line-height:1.6}
 .bunn{max-width:840px;margin:0 auto;padding:22px 18px 30px}
 .skjult{display:none}
-@media (max-width:520px){ nav{gap:18px} .felt{min-width:130px} }
+@media (max-width:560px){
+  nav{gap:18px}
+  .felt{min-width:130px}
+  /* Smal skjerm: hvert navn på egen linje, etiketten står i margen */
+  .verdier .p{display:block}
+  .verdier .p + .p::before{content:none;margin:0}
+}
 </style>
 </head>
 <body>
@@ -319,6 +327,13 @@ function sondagInfo(iso){
     andreUte:listeAv(d.ikkeMed).filter(n=>!roster.some(([r])=>fornavn(r)===fornavn(n)))
   };
 }
+/** Alle som står i et fast team. Disse merkes ikke «vikar» når de
+ *  hjelper til hos et annet team — bare folk utenfra får den merkelappen. */
+function faste(){
+  const s=new Set();
+  Object.values(TEAMS).forEach(r=>r.forEach(([n])=>s.add(fornavn(n))));
+  return s;
+}
 function allePersoner(){
   const m=new Map();
   Object.values(TEAMS).forEach(r=>r.forEach(([n])=>m.set(fornavn(n),n)));
@@ -345,21 +360,24 @@ function tegnHvem(valgt){
     if(valgt && !spillerNå && !uteNå) continue;
     if(spillerNå) mine++;
     const v=visDato(iso);
+    const F=faste();
     const vis = liste => liste.map(p=>{
       const meg = valgt && fornavn(p.navn)===valgt;
-      return `${esc(p.navn)}${p.detalj?` <span class="instr">${esc(p.detalj)}</span>`:''}`
-           + (p.vikar?'<span class="instr"> (vikar)</span>':'')
-           + (meg?'<span class="meg">deg</span>':'');
-    }).join(' · ');
+      return `<span class="p">${esc(p.navn)}`
+           + (p.detalj?` <span class="instr">${esc(p.detalj)}</span>`:'')
+           + (p.vikar && !F.has(fornavn(p.navn)) ? '<span class="instr"> (vikar)</span>':'')
+           + (meg?'<span class="meg">deg</span>':'')
+           + `</span>`;
+    }).join('');
     const alleUte=[...i.borte.map(([n])=>n), ...i.andreUte];
     rader.push(`<div class="rad ${spillerNå?'min':''}">
       <div class="dato"><b>${v.dag}</b><span>${v.mnd}</span></div>
       <div class="innhold">
         <div class="lag">${esc(i.team)}</div>
-        <div class="linje"><span class="nok">Vokal</span>${vis(i.vokal)||'<span class="ute">ingen</span>'}</div>
-        <div class="linje"><span class="nok">Instrument</span>${vis(i.instr)||'<span class="ute">ingen</span>'}</div>
-        ${alleUte.length?`<div class="linje ute"><span class="nok">Ikke med</span>${esc(alleUte.join(', '))}</div>`:''}
-        ${i.behov.length?`<div class="linje ute"><span class="nok">Trenger</span>${esc(i.behov.join(' · '))}</div>`:''}
+        <div class="linje"><span class="nok">Vokal</span><span class="verdier">${vis(i.vokal)||'<span class="ute">ingen</span>'}</span></div>
+        <div class="linje"><span class="nok">Instrument</span><span class="verdier">${vis(i.instr)||'<span class="ute">ingen</span>'}</span></div>
+        ${alleUte.length?`<div class="linje ute"><span class="nok">Ikke med</span><span class="verdier">${esc(alleUte.join(', '))}</span></div>`:''}
+        ${i.behov.length?`<div class="linje ute"><span class="nok">Trenger</span><span class="verdier">${esc(i.behov.join(' · '))}</span></div>`:''}
       </div></div>`);
   }
   box.innerHTML=`<div class="kort">${rader.join('')||'<div class="tilstand">Ingen søndager.</div>'}</div>`;
@@ -395,11 +413,11 @@ function tegnDetalj(iso){
   if(g.moteleder) info.push(['Møteleder',g.moteleder]);
   if(g.kl) info.push(['Klokken',g.kl]);
   if(g.merknad) info.push(['Merknad',g.merknad]);
+  const F=faste();
   const linje = liste => liste.map(p=>
     `${esc(p.navn)}${p.detalj?` <span class="instr">${esc(p.detalj)}</span>`:''}`
-    + (p.vikar?'<span class="instr"> (vikar)</span>':'')).join(' · ');
+    + (p.vikar && !F.has(fornavn(p.navn)) ? '<span class="instr"> (vikar)</span>':'')).join(' · ');
   const v=[];
-  if(d.ikkeMed) v.push(`<dt>Ikke med</dt><dd>${esc(d.ikkeMed)}</dd>`);
   if(i.behov.length) v.push(`<dt>Trenger</dt><dd><span class="merk">${esc(i.behov.join(' · '))}</span></dd>`);
   return `<div class="utfoldet">
     ${info.length?`<h3 class="etikett">Gudstjenesten</h3><dl>${info.map(([k,x])=>`<dt>${k}</dt><dd>${esc(x)}</dd>`).join('')}</dl>`:''}
