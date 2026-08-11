@@ -183,12 +183,78 @@ const csvUrl = (pub,gid) =>
    så de virker bare for medlemmer av Musikkarkiv. Blir lenkene regenerert,
    er det bare disse to strengene som må byttes. */
 const MAPPE = {
-  tekst:  'https://www.dropbox.com/scl/fo/vunwkl534as0cvoi5hv7g/AE0g3vxie4NUgG-4f0DsKiQ?rlkey=arthcpeg196157qivkynhfxzv&dl=0',
-  blekke: 'https://www.dropbox.com/scl/fo/sapbkukooess8kkfx6s2b/AN6tmxn4fG-DI_SlEfMHPAE?rlkey=ohbjdnkkskrw5jyo01kbgocn2&dl=0'
+  tekst:  {id:'vunwkl534as0cvoi5hv7g', map:'AE0g3vxie4NUgG-4f0DsKiQ', key:'arthcpeg196157qivkynhfxzv'},
+  blekke: {id:'sapbkukooess8kkfx6s2b', map:'AN6tmxn4fG-DI_SlEfMHPAE', key:'ohbjdnkkskrw5jyo01kbgocn2'}
 };
-const filUrl = (mappe, filnavn) =>
-  mappe + '&preview=' + encodeURIComponent(filnavn).replace(/[()!'*]/g,
-    c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+
+/* Dropbox gir hver fil en egen id. Adresser bygget med den peker rett på fila,
+   og åpnes riktig også i mobilappen — i motsetning til mappeadresse + ?preview=,
+   som appen ignorerer. Nye filer må legges inn her for å få direktelenke. */
+const FILID = {
+ 'blekke:Vi vender om (A-moll).pdf':'ACTYMbaAJ0NXQzxRaUeG0yA',
+ 'blekke:Jesus, mitt hjerte blekke.pdf':'AJ8lEjzrFghuOR99A7R7s5E',
+ 'blekke:Tilbake (H-moll).pdf':'ABYn9wtSMFxA3rAiROMKNsY',
+ 'blekke:Holy Forever (F).pdf':'ADt5_8JNlbdFLScFgYb0D28',
+ 'blekke:3. Kong Jesus UL2024.pdf':'ADyc4XJzlz98fAB4Up-Bx_A',
+ 'blekke:Kom-Løft-Opp-Hans-Navn-Vision-E-2 (1) (1).pdf':'ABsLwYFRWt1UmferaB7NnDU',
+ 'blekke:What a beautiful name it is.pdf':'AJqBh4MFO3_MXjp2JdFtW5c',
+ 'blekke:Graven Er Tom - David André Østby Ddur - Full Score-kopi.pdf':'AGKjBNTDAGtpQFqfIbJt8AA',
+ 'blekke:Fullkommen Majestet.pdf':'AAnuh26OXHmodyHjGCJW7E0',
+ 'blekke:Ære (E).pdf':'AE8hY8nSUzyFaAyTiASejJ4',
+ 'blekke:Navnet Jesus - UL2015.pdf':'AKH3XwaRKfCFLyc8lk4FvBA',
+ 'blekke:Halleluja - Filadelfiakirken, David André Østby.pdf':'AMu3cxopFAeI-po3neYfvN4',
+ 'blekke:Kristus og Ham korsfestet - Østby og Neteland.pdf':'APz7HDJAkEc5jcCadUMhTa0',
+ 'blekke:Here I am to worship - Hillsong Worship.pdf':'ADTqEjAJ44OE3mAI3S2sGz0',
+ 'blekke:For så langt - Filadelfiakirken.pdf':'AKPuMM0Y6hXsPUW2VQvDPjM',
+ 'blekke:Jeg er i Herrens hender (Olsen).pdf':'AF9YdM_zG_6W-9rkXnFyDgI',
+ 'blekke:Så dyp en Kjærlighet - C.pdf':'ABDfTarlUPOs2pcj2XkO__8',
+ 'blekke:Kom-og-se-bandblekke-E.pdf':'AFVFwwY-O0jWI1gjHpmmhSI',
+ 'blekke:Living hope - Phil Wickham.pdf':'AMwGtDo9A9A9ORZszkKiSp8',
+ 'blekke:In christ alone.pdf':'AOoHhoQr1QKKGe8LoqZGvbc',
+ 'blekke:Yet Not I But Through Christ.pdf':'AAkmiZ2iamergy5FR2K2nj4',
+ 'blekke:Nåde (D-dur) UNDHEIM.pdf':'ALmRlxkFexIR-t-pWvQWUwQ',
+ 'blekke:Hjelp meg å gå.pdf':'ABE666da3bULclIi3SQKE_8',
+ 'blekke:Det går en väg mot framtiden - H-dur.pdf':'ACan904l_CqBWXg2uS4CnoU',
+ 'blekke:Jeg vil gi deg O Herre min lovsang GF (A-dur).pdf':'AMvReKsTqDSZZjzzKvMn7hQ',
+ 'blekke:Jeg vil følge deg.pdf':'ANQx6oaDrGbEdDs3GVEICAY',
+ 'blekke:vitner-gf-sangen-2022.pdf':'AL0jtxBalYuWzwlAdOqz7U8',
+ 'blekke:Kjære Gud, når eg bed.pdf':'AH8Txf6J9BR9N7Ej8dQoQ_I',
+ 'tekst:Vi vender om (norsk) - Pingst.pdf':'AMVuLHqIPCJWRudp0cJ6Ft0',
+ 'tekst:Jesus, mitt hjerte tekst.pdf':'AMM3O_VPzSlq3UhLlmztpes',
+ 'tekst:Tilbake.pdf':'AJZlt8k5tFFrR0KBnjyLLfs',
+ 'tekst:Holy Forever.pdf':'AIIfg7UxppY7_1eRX7kqQmY',
+ 'tekst:Kong Jesus UL2024.pdf':'AODr1WIYemDN-P_u5PFvP_0',
+ 'tekst:Kom, løft opp Hans navn - Neteland.pdf':'ABNbiLJ3O0MRaqv5-bdcAAA',
+ 'tekst:What a beautiful name it is.pdf':'ADYnGplx9IDpdzd41XO-fbI',
+ 'tekst:Graven er tom.pdf':'AODNNexR9O9uus_m9OnaV04',
+ 'tekst:Fullkommen majestet.pdf':'AF4ZG8Tsb9OhC5qz4yPjgto',
+ 'tekst:Ære.docx':'AMVvMQEBXcmDsL9kc1Qi3fE',
+ 'tekst:Lion and the lamb.pdf':'ABUWAx6KYAOLhj1x7TuDpTw',
+ 'tekst:Kristus og Ham korsfestet - Pinse Lovsang, Neteland, David André Østby.pdf':'ACLBX10W_paycnUQ-L4usbo',
+ 'tekst:Here I am to worship.pdf':'APl1mhZz5vWKhmOGanxN-EQ',
+ 'tekst:For så langt - Filadelfiakirken.pdf':'AEaS_r5CZTmHXxBSNnuyF4Y',
+ 'tekst:Jeg er i Herrens hender.pdf':'AM6KzKYuvG_o3GmmOaId5Y4',
+ 'tekst:Så dyp en kjærlighet.doc':'AIQXLSXt_03IuJX7c0bpg4g',
+ 'tekst:Kom og se (1).docx':'AA_FTaJVmcPXvPwfpBUm5TA',
+ 'tekst:Living hope (1).pdf':'ABHnL1DkdP15A2QihMQhaEY',
+ 'tekst:In Christ alone my hope is found.doc':'AMURAEWieDDj1niINmCN6pw',
+ 'tekst:Yet Not I But Through Christ In Me.pdf':'AN3y2GBSKDGyDdPhOIaM_NY',
+ 'tekst:Nåde.pdf':'AHWTAxmQcs1QKT0Rm8hzH3M',
+ 'tekst:Hjelp meg å gå.pdf':'AK9N_MXO9WzWMPXvooe4HU4',
+ 'tekst:Det går en vei mot fremtiden- tekst.pdf':'AEiHq0TV5fhoTcl5l8IzD9M',
+ 'tekst:Jeg vil gi deg o Herre min lovsang.pdf':'ADe-H3-WKLjsJA3jY33jCrg',
+ 'tekst:Jeg vil følge deg.pdf':'ADevzjy4zypkt8rmZOCuJtM',
+ 'tekst:Vitner - NLM GF.pdf':'AD8UpoLCAYbEIE8941Ok6D0',
+ 'tekst:Kjære Gud når eg bed_tekst.docx':'ALKucsGgvsK_dlsirRpRJII'
+};
+const kod = s => encodeURIComponent(s).replace(/[()!'*]/g,
+  c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+function filUrl(hvor, filnavn){
+  const m = MAPPE[hvor], id = FILID[hvor+':'+filnavn];
+  return id
+    ? `https://www.dropbox.com/scl/fo/${m.id}/${id}/${kod(filnavn)}?rlkey=${m.key}&dl=0`
+    : `https://www.dropbox.com/scl/fo/${m.id}/${m.map}?rlkey=${m.key}&dl=0&preview=${kod(filnavn)}`;
+}
 
 let TEAMS = {};
 
@@ -387,9 +453,9 @@ function tegnHvem(valgt){
 }
 
 /* ========================================================= SET-LISTE ===== */
-function fil(navn,mappe,hva){
+function fil(navn,hvor,hva){
   if(!navn) return `<span class="mangler">${hva} mangler i arkivet</span>`;
-  return `<a href="${filUrl(mappe,navn)}" target="_blank" rel="noopener">${hva} ↗</a>`
+  return `<a href="${filUrl(hvor,navn)}" target="_blank" rel="noopener">${hva} ↗</a>`
        + ` <span class="filnavn">${esc(navn)}</span>`;
 }
 function tegnSanger(iso){
@@ -397,7 +463,7 @@ function tegnSanger(iso){
   if(!valg||!valg.length) return `<p class="tilstand" style="padding:10px 0">Ingen sanger lagt inn ennå.</p>`;
   return `<ol class="sanger">`+valg.map(v=>{
     const s=DATA.sanger.get(normTitle(v.tittel));
-    const files=s ? fil(s.blekkefil,MAPPE.blekke,'Blekke')+'<br>'+fil(s.tekstfil,MAPPE.tekst,'Sangtekst')
+    const files=s ? fil(s.blekkefil,'blekke','Blekke')+'<br>'+fil(s.tekstfil,'tekst','Sangtekst')
                   : `<span class="mangler">Står ikke i sangbanken — sjekk skrivemåten</span>`;
     return `<li><div class="plass">${esc(v.slot)}</div>
       <div class="tittel">${esc(v.tittel)}</div>
