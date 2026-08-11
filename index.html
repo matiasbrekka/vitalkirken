@@ -385,15 +385,16 @@ function sondagInfo(iso){
      dermed ut av vokalrekka, slik at behovet der blir synlig. */
   const erHarmoni = p => /piano|gitar|keys|klaver/i.test(p.detalj);
   const erK = p => fornavn(p.navn)==='kristoffer';
-  if(!instr.some(erHarmoni)){
-    const iv = vokal.findIndex(erK);
-    if(iv>-1){
-      const k = vokal.splice(iv,1)[0];
-      if(!instr.some(erK)) instr.push({navn:k.navn, detalj:'piano', vikar:k.vikar});
+  if(vokal.some(erK) || instr.some(erK)){
+    const andreHarmoni = instr.some(p=>erHarmoni(p) && !erK(p));
+    const kv = vokal.find(erK), ki = instr.find(erK);
+    /* Er harmonien dekket av andre, synger han. Ellers spiller han piano. */
+    if(andreHarmoni && kv){
+      for(let j=instr.length-1;j>=0;j--) if(erK(instr[j])) instr.splice(j,1);
+    }else{
+      for(let j=vokal.length-1;j>=0;j--) if(erK(vokal[j])) vokal.splice(j,1);
+      if(!ki) instr.push({navn:(kv||{}).navn||'Kristoffer', detalj:'piano', vikar:(kv||{}).vikar});
     }
-  } else if(instr.some(erK)){
-    const iv = vokal.findIndex(erK);
-    if(iv>-1) vokal.splice(iv,1);
   }
   /* Kravet til et komplett band:
      minst én som spiller piano eller gitar, og minst to vokalister.
