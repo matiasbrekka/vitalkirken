@@ -435,14 +435,13 @@ function tegnHvem(valgt){
            + (meg?'<span class="meg">deg</span>':'')
            + `</span>`;
     }).join('');
-    const alleUte=[...i.borte.map(([n])=>n), ...i.andreUte];
     rader.push(`<div class="rad ${spillerNå?'min':''}">
       <div class="dato"><b>${v.dag}</b><span>${v.mnd}</span></div>
       <div class="innhold">
         <div class="lag">${esc(i.team)}</div>
         <div class="linje"><span class="nok">Vokal</span><span class="verdier">${vis(i.vokal)||'<span class="ute">ingen</span>'}</span></div>
         <div class="linje"><span class="nok">Instrument</span><span class="verdier">${vis(i.instr)||'<span class="ute">ingen</span>'}</span></div>
-        ${alleUte.length?`<div class="linje ute"><span class="nok">Ikke med</span><span class="verdier">${esc(alleUte.join(', '))}</span></div>`:''}
+        ${i.behov.length?`<div class="linje ute"><span class="nok">Trenger</span><span class="verdier">${esc(i.behov.join(' · '))}</span></div>`:''}
       </div></div>`);
   }
   box.innerHTML=`<div class="kort">${rader.join('')||'<div class="tilstand">Ingen søndager.</div>'}</div>`;
