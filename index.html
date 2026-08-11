@@ -89,9 +89,8 @@ ol.sanger li{padding:11px 0;border-bottom:1px solid var(--strek)}
 ol.sanger li:last-child{border-bottom:0}
 .plass{font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--grus)}
 .tittel{font-weight:600;font-size:15.5px}
-.filer{font-size:13px;color:var(--grus);margin-top:4px;line-height:1.8}
+.filer{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--grus);margin-top:5px}
 .filer a{color:var(--kull);font-weight:600;text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
-.filnavn{font-size:12px;color:#a3a094}
 
 .tilstand{padding:30px 16px;text-align:center;color:var(--grus);font-size:14px}
 .varsel{background:var(--rust-lys);border-left:3px solid var(--rust);color:var(--rust);
@@ -468,16 +467,15 @@ function tegnHvem(valgt){
 
 /* ========================================================= SET-LISTE ===== */
 function fil(navn,hvor,hva){
-  if(!navn) return `<span class="mangler">${hva} mangler i arkivet</span>`;
-  return `<a href="${filUrl(hvor,navn)}" target="_blank" rel="noopener">${hva} ↗</a>`
-       + ` <span class="filnavn">${esc(navn)}</span>`;
+  if(!navn) return `<span class="mangler">${hva} mangler</span>`;
+  return `<a href="${filUrl(hvor,navn)}" target="_blank" rel="noopener">${hva} ↗</a>`;
 }
 function tegnSanger(iso){
   const valg=DATA.sangvalg.get(iso);
   if(!valg||!valg.length) return `<p class="tilstand" style="padding:10px 0">Ingen sanger lagt inn ennå.</p>`;
   return `<ol class="sanger">`+valg.map(v=>{
     const s=DATA.sanger.get(normTitle(v.tittel));
-    const files=s ? fil(s.blekkefil,'blekke','Blekke')+'<br>'+fil(s.tekstfil,'tekst','Sangtekst')
+    const files=s ? fil(s.tekstfil,'tekst','Sangtekst')+fil(s.blekkefil,'blekke','Blekke')
                   : `<span class="mangler">Står ikke i sangbanken — sjekk skrivemåten</span>`;
     return `<li><div class="plass">${esc(v.slot)}</div>
       <div class="tittel">${esc(v.tittel)}</div>
