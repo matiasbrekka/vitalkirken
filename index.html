@@ -138,10 +138,20 @@ footer{background:var(--kull);color:#a5a296;font-size:12.5px;line-height:1.6}
   <section id="view-who">
     <div class="filtre">
       <div class="felt">
-        <label for="person">Vis søndager for</label>
-        <select id="person"><option value="">alle</option></select>
+        <label for="w-dato">Dato</label>
+        <select id="w-dato"><option value="">alle</option></select>
+      </div>
+      <div class="felt">
+        <label for="w-team">Team</label>
+        <select id="w-team"><option value="">alle</option></select>
+      </div>
+      <div class="felt">
+        <label for="w-musiker">Musiker</label>
+        <select id="w-musiker"><option value="">alle</option></select>
       </div>
     </div>
+    <button class="nullstill" id="w-nullstill">Nullstill filtre</button>
+    <p class="treff" id="w-treff"></p>
     <div id="mine"></div>
     <div id="wholist"><div class="tilstand">Henter data …</div></div>
   </section>
@@ -157,7 +167,7 @@ footer{background:var(--kull);color:#a5a296;font-size:12.5px;line-height:1.6}
         <select id="f-team"><option value="">alle</option></select>
       </div>
       <div class="felt">
-        <label for="f-medlem">Medlem</label>
+        <label for="f-medlem">Musiker</label>
         <select id="f-medlem"><option value="">alle</option></select>
       </div>
     </div>
@@ -170,7 +180,7 @@ footer{background:var(--kull);color:#a5a296;font-size:12.5px;line-height:1.6}
 <footer>
   <div class="bunn">
     Blekker og sangtekster åpnes i Dropbox, og krever at du er medlem av Tøyen Musikklag i Dropbox.
-    Spør Matias dersom du trenger tilgang.
+    Ta kontakt med Matias dersom du trenger tilgang.
   </div>
 </footer>
 
@@ -444,17 +454,22 @@ const erLeder = n => LEDERE.includes(fornavn(n));
 const navnHtml = n => erLeder(n) ? `<b class="leder">${esc(n)}</b>` : esc(n);
 
 /* ================================================== HVEM SPILLER NÅR ===== */
-function tegnHvem(valgt){
+function tegnHvem(){
+  const fDato=document.getElementById('w-dato').value;
+  const fTeam=document.getElementById('w-team').value;
+  const valgt=document.getElementById('w-musiker').value;
   const box=document.getElementById('wholist'), sum=document.getElementById('mine');
   if(!DATA.datoliste.length){ box.innerHTML=`<div class="tilstand">Fant ingen datoer.</div>`; return; }
-  const rader=[]; let mine=0; const minedatoer=[];
+  const rader=[]; let mine=0;
   for(const iso of DATA.datoliste){
+    if(fDato && iso!==fDato) continue;
+    if(fTeam && (DATA.datoer.get(iso)||{}).team!==fTeam) continue;
     const i=sondagInfo(iso);
     const spillerNå = valgt && spillerPa(iso,valgt);
     const uteNå = valgt && (i.borte.some(([n])=>fornavn(n)===valgt)
                           || i.andreUte.some(n=>fornavn(n)===valgt));
     if(valgt && !spillerNå && !uteNå) continue;
-    if(spillerNå){ mine++; minedatoer.push(iso); }
+    if(spillerNå) mine++;
     const v=visDato(iso);
     const F=faste();
     const vis = liste => liste.map(p=>{
@@ -475,6 +490,10 @@ function tegnHvem(valgt){
       </div></div>`);
   }
   box.innerHTML=`<div class="kort">${rader.join('')||'<div class="tilstand">Ingen søndager.</div>'}</div>`;
+  document.getElementById('w-treff').textContent =
+    rader.length===DATA.datoliste.length
+      ? `${rader.length} søndager`
+      : `${rader.length} av ${DATA.datoliste.length} søndager`;
   sum.innerHTML = valgt
     ? `<div class="oppsum">${esc(allePersoner().find(n=>fornavn(n)===valgt)||valgt)} spiller ${mine} ${mine===1?'søndag':'søndager'} i høst. Oppmøte 09:00.</div>`
     : `<div class="oppsum">Oppmøte 09:00 hver søndag.</div>`;
@@ -607,30 +626,26 @@ function tegnSetliste(){
 /* ============================================================ FILTRE ===== */
 function fyllFiltre(){
   const pers=allePersoner();
-  const sel=document.getElementById('person');
-  pers.forEach(n=>{ const o=document.createElement('option');
-    o.value=fornavn(n); o.textContent=n; sel.appendChild(o); });
-  sel.addEventListener('change',e=>tegnHvem(e.target.value));
+  const team=[...new Set(DATA.datoliste.map(i=>(DATA.datoer.get(i)||{}).team).filter(Boolean))].sort();
+  const fyll=(id,par)=>{ const s=document.getElementById(id);
+    par.forEach(([v,t])=>{ const o=document.createElement('option');
+      o.value=v; o.textContent=t; s.appendChild(o); }); };
+  const datoPar   = DATA.datoliste.map(iso=>[iso, visDato(iso).lang]);
+  const teamPar   = team.map(t=>[t,t]);
+  const persPar   = pers.map(n=>[fornavn(n), n]);
 
-  const fd=document.getElementById('f-dato');
-  DATA.datoliste.forEach(iso=>{ const o=document.createElement('option');
-    o.value=iso; o.textContent=visDato(iso).lang; fd.appendChild(o); });
+  /* Begge fanene har samme tre filtre: dato, team og musiker. */
+  [['w-dato',datoPar],['w-team',teamPar],['w-musiker',persPar],
+   ['f-dato',datoPar],['f-team',teamPar],['f-medlem',persPar]].forEach(([id,par])=>fyll(id,par));
 
-  const ft=document.getElementById('f-team');
-  [...new Set(DATA.datoliste.map(i=>(DATA.datoer.get(i)||{}).team).filter(Boolean))]
-    .sort().forEach(t=>{ const o=document.createElement('option');
-      o.value=t; o.textContent=t; ft.appendChild(o); });
-
-  const fm=document.getElementById('f-medlem');
-  pers.forEach(n=>{ const o=document.createElement('option');
-    o.value=fornavn(n); o.textContent=n; fm.appendChild(o); });
-
-  ['f-dato','f-team','f-medlem'].forEach(id=>
-    document.getElementById(id).addEventListener('change',tegnSetliste));
-  document.getElementById('nullstill').addEventListener('click',()=>{
-    ['f-dato','f-team','f-medlem'].forEach(id=>document.getElementById(id).value='');
-    tegnSetliste();
-  });
+  const kobl=(ider,tegn,nullstillId)=>{
+    ider.forEach(id=>document.getElementById(id).addEventListener('change',tegn));
+    document.getElementById(nullstillId).addEventListener('click',()=>{
+      ider.forEach(id=>document.getElementById(id).value=''); tegn();
+    });
+  };
+  kobl(['w-dato','w-team','w-musiker'], tegnHvem,     'w-nullstill');
+  kobl(['f-dato','f-team','f-medlem'],  tegnSetliste, 'nullstill');
 }
 
 /* ============================================================= START ===== */
@@ -659,7 +674,7 @@ async function start(){
   }
   DATA.datoliste=[...new Set([...DATA.datoer.keys(),...DATA.sangvalg.keys()])].sort();
   fyllFiltre();
-  tegnHvem('');
+  tegnHvem();
   tegnSetliste();
 }
 
