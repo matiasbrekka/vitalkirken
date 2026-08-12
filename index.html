@@ -443,64 +443,6 @@ const LEDERE = ['kristine','kristoffer','vemund'];
 const erLeder = n => LEDERE.includes(fornavn(n));
 const navnHtml = n => erLeder(n) ? `<b class="leder">${esc(n)}</b>` : esc(n);
 
-/* ========================================================== KALENDER ===== */
-const OPPMOTE='090000', SLUTT='123000';
-const to = n => String(n).padStart(2,'0');
-const icsTekst = s => String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;')
-                               .replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
-function icsStempel(){
-  const d=new Date();
-  return `${d.getUTCFullYear()}${to(d.getUTCMonth()+1)}${to(d.getUTCDate())}`
-       + `T${to(d.getUTCHours())}${to(d.getUTCMinutes())}${to(d.getUTCSeconds())}Z`;
-}
-const OSLO = ['BEGIN:VTIMEZONE','TZID:Europe/Oslo',
-  'BEGIN:DAYLIGHT','TZOFFSETFROM:+0100','TZOFFSETTO:+0200','TZNAME:CEST',
-  'DTSTART:19700329T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU','END:DAYLIGHT',
-  'BEGIN:STANDARD','TZOFFSETFROM:+0200','TZOFFSETTO:+0100','TZNAME:CET',
-  'DTSTART:19701025T030000','RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU','END:STANDARD',
-  'END:VTIMEZONE'];
-function byggIcs(datoer){
-  const ut=['BEGIN:VCALENDAR','VERSION:2.0','CALSCALE:GREGORIAN','METHOD:PUBLISH',
-            'PRODID:-//Vitalkirken Tøyen//Lovsang//NO', ...OSLO];
-  const nå=icsStempel();
-  datoer.forEach(iso=>{
-    const i=sondagInfo(iso), g=DATA.gudstj.get(iso)||{};
-    const d=iso.replace(/-/g,'');
-    const b=[`Team: ${i.team}`];
-    if(i.vokal.length)  b.push('Vokal: '+i.vokal.map(p=>p.navn).join(', '));
-    if(i.instr.length)  b.push('Instrument: '+i.instr.map(p=>p.navn+(p.detalj?` (${p.detalj})`:'')).join(', '));
-    if(i.behov.length)  b.push('Trenger: '+i.behov.join(', '));
-    if(g.tema)          b.push('Tema: '+g.tema);
-    if(g.taler)         b.push('Taler: '+g.taler);
-    const sanger=(DATA.sangvalg.get(iso)||[]).map(v=>`${v.slot}: ${v.tittel}`);
-    if(sanger.length) b.push('', 'Sanger:', ...sanger);
-    b.push('', `Gudstjenesten begynner ${g.kl||'11:00'}.`,
-              'https://matiasbrekka.github.io/vitalkirken/');
-    ut.push('BEGIN:VEVENT',
-      `UID:lovsang-${iso}@vitalkirken.tøyen`,
-      `DTSTAMP:${nå}`,
-      `DTSTART;TZID=Europe/Oslo:${d}T${OPPMOTE}`,
-      `DTEND;TZID=Europe/Oslo:${d}T${SLUTT}`,
-      `SUMMARY:Lovsang · ${icsTekst(i.team)}`,
-      'LOCATION:Vitalkirken Tøyen',
-      `DESCRIPTION:${icsTekst(b.join('\n'))}`,
-      'BEGIN:VALARM','ACTION:DISPLAY','TRIGGER:-PT15H',
-      'DESCRIPTION:Lovsang i morgen – oppmøte 09:00','END:VALARM',
-      'END:VEVENT');
-  });
-  ut.push('END:VCALENDAR');
-  return ut.join('\r\n');
-}
-window.tilKalender = function(datoer, filnavn){
-  if(!datoer.length) return;
-  const blob=new Blob([byggIcs(datoer)],{type:'text/calendar;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download=filnavn; document.body.appendChild(a);
-  a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 20000);
-};
-
 /* ================================================== HVEM SPILLER NÅR ===== */
 function tegnHvem(valgt){
   const box=document.getElementById('wholist'), sum=document.getElementById('mine');
@@ -533,17 +475,9 @@ function tegnHvem(valgt){
       </div></div>`);
   }
   box.innerHTML=`<div class="kort">${rader.join('')||'<div class="tilstand">Ingen søndager.</div>'}</div>`;
-  /* Oppmøte er 09:00. Knappen lager en .ics-fil med alle søndagene
-     personen spiller, og lar telefonen legge dem rett i kalenderen. */
-  const kal = valgt ? minedatoer : [...DATA.datoliste];
-  const filnavn = valgt ? `lovsang-${valgt}.ics` : 'lovsang-hosten-2026.ics';
-  const knapp = kal.length
-    ? `<div class="knapperad"><button class="lastned" onclick='tilKalender(${JSON.stringify(kal)},"${filnavn}")'>`
-      + (valgt ? `Legg mine ${kal.length} søndager i kalenderen` : `Legg alle ${kal.length} søndagene i kalenderen`)
-      + `</button></div>` : '';
-  sum.innerHTML = (valgt
+  sum.innerHTML = valgt
     ? `<div class="oppsum">${esc(allePersoner().find(n=>fornavn(n)===valgt)||valgt)} spiller ${mine} ${mine===1?'søndag':'søndager'} i høst. Oppmøte 09:00.</div>`
-    : `<div class="oppsum">Oppmøte 09:00 hver søndag.</div>`) + knapp;
+    : `<div class="oppsum">Oppmøte 09:00 hver søndag.</div>`;
 }
 
 /* ========================================================= SET-LISTE ===== */
@@ -620,7 +554,6 @@ function tegnDetalj(iso){
   const v=[];
   if(i.behov.length) v.push(`<dt>Trenger</dt><dd><span class="merk">${esc(i.behov.join(' · '))}</span></dd>`);
   return `<div class="utfoldet">
-    <div class="knapperad"><button class="lastned" onclick="tilKalender(['${iso}'],'lovsang-${iso}.ics')">Legg i kalenderen</button></div>
     ${info.length?`<h3 class="etikett">Gudstjenesten</h3><dl>${info.map(([k,x])=>`<dt>${k}</dt><dd>${esc(x)}</dd>`).join('')}</dl>`:''}
     <h3 class="etikett">Besetning</h3>
     <dl><dt>Vokal</dt><dd>${linje(i.vokal)||'—'}</dd>
