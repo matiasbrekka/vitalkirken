@@ -314,12 +314,25 @@ const renskMerknad=s=>!s?'':(/d[åa]p/i.test(s)?'Dåp':s);
 /* ============================================================== DATA ===== */
 const DATA={sanger:new Map(),sangvalg:new Map(),datoer:new Map(),gudstj:new Map(),datoliste:[]};
 
+/** Finn kolonnene ut fra overskriftsraden, ikke ut fra posisjon.
+ *  Da tåler arket at kolonner flyttes eller at det settes inn nye. */
+function kolonner(head, navn){
+  const k={};
+  Object.entries(navn).forEach(([felt,titler])=>{
+    k[felt] = head.findIndex(h=>titler.includes((h||'').trim().toLowerCase()));
+  });
+  return k;
+}
 function byggSangbank(rows){
+  const k = kolonner(rows[0]||[], {tittel:['sang'], tekst:['sangtekst'],
+    blekke:['blekke'], toneart:['toneart'], tempo:['tempo']});
+  if(k.tittel<0) return;
+  const les=(r,i)=>i>-1 ? (r[i]||'').trim() : '';
   for(const r of rows.slice(1)){
-    if(!r[2]) continue;
-    /* L = Toneart, M = Tempo — hentet fra blekkene, kan overstyres i arket. */
-    DATA.sanger.set(normTitle(r[2]),{tittel:r[2],tekstfil:r[8]||'',blekkefil:r[9]||'',
-                                     toneart:(r[11]||'').trim(), tempo:(r[12]||'').trim()});
+    const tittel=les(r,k.tittel); if(!tittel) continue;
+    DATA.sanger.set(normTitle(tittel),{tittel,
+      tekstfil:les(r,k.tekst), blekkefil:les(r,k.blekke),
+      toneart:les(r,k.toneart), tempo:les(r,k.tempo)});
   }
 }
 function byggSangvalg(rows){
