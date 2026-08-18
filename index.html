@@ -462,6 +462,12 @@ const spillerPa = (iso,f) => {
 };
 /* De tre teamlederne. Navnet deres settes i fet skrift der de spiller,
    slik at det er tydelig hvem som leder søndagen. */
+/* Datofilteret har en ekstra verdi ved siden av de faktiske datoene:
+   VIKAR viser alle sondager der bandet mangler noe. */
+const VIKAR = '__vikar';
+const passerDato = (iso, valg) =>
+  !valg ? true : valg===VIKAR ? sondagInfo(iso).behov.length>0 : iso===valg;
+
 const LEDERE = ['kristine','kristoffer','vemund'];
 const erLeder = n => LEDERE.includes(fornavn(n));
 const navnHtml = n => erLeder(n) ? `<b class="leder">${esc(n)}</b>` : esc(n);
@@ -475,7 +481,7 @@ function tegnHvem(){
   if(!DATA.datoliste.length){ box.innerHTML=`<div class="tilstand">Fant ingen datoer.</div>`; return; }
   const rader=[]; let mine=0;
   for(const iso of DATA.datoliste){
-    if(fDato && iso!==fDato) continue;
+    if(!passerDato(iso,fDato)) continue;
     if(fTeam && (DATA.datoer.get(iso)||{}).team!==fTeam) continue;
     const i=sondagInfo(iso);
     const spillerNå = valgt && spillerPa(iso,valgt);
@@ -598,7 +604,7 @@ function tegnSetliste(){
   const fMed =document.getElementById('f-medlem').value;
   const el=document.getElementById('setlist');
   const treff=DATA.datoliste.filter(iso=>{
-    if(fDato && iso!==fDato) return false;
+    if(!passerDato(iso,fDato)) return false;
     if(fTeam && (DATA.datoer.get(iso)||{}).team!==fTeam) return false;
     if(fMed && !spillerPa(iso,fMed)) return false;
     return true;
@@ -643,7 +649,7 @@ function fyllFiltre(){
   const fyll=(id,par)=>{ const s=document.getElementById(id);
     par.forEach(([v,t])=>{ const o=document.createElement('option');
       o.value=v; o.textContent=t; s.appendChild(o); }); };
-  const datoPar   = DATA.datoliste.map(iso=>[iso, visDato(iso).lang]);
+  const datoPar   = [[VIKAR,'trenger vikar'], ...DATA.datoliste.map(iso=>[iso, visDato(iso).lang])];
   const teamPar   = team.map(t=>[t,t]);
   const persPar   = pers.map(n=>[fornavn(n), n]);
 
