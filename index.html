@@ -139,7 +139,7 @@ footer{background:var(--kull);color:#a5a296;font-size:12.5px;line-height:1.6}
     <img class="logo" alt="Vitalkirken"
          src="https://d1nizz91i54auc.cloudfront.net/_service/502497/display/img_version/8116427/t/1692265670/img_name/68193_502497_dff736e467.png.webp">
     <div class="merke">
-      <h1>Lovsang · Tøyen</h1>
+      <h1>Lovsang · Vitalkirken Tøyen</h1>
       <p>Høsten 2026</p>
     </div>
   </div>
@@ -688,10 +688,20 @@ function tegnSetliste(){
 }
 
 /* =========================================================== SANGBANK ===== */
-/** Sangene som fortsatt er i bruk, sortert på tittel. */
+/* Tematikkene kommer i gudstjenestens egen rekkefølge, ikke alfabetisk.
+   Sammenlikningen er på begynnelsen av navnet, så «Nåde/ordet/nattverd»
+   treffer på «nåde». Ukjente tematikker havner sist. */
+const TEMAREKKE = ['lovprisning','erkjennelse','barnesang','nåde','sendelse'];
+const temaRang = k => {
+  const s=(k||'').trim().toLowerCase();
+  const i=TEMAREKKE.findIndex(t=>s.startsWith(t));
+  return i<0 ? TEMAREKKE.length : i;
+};
+/** Sangene som fortsatt er i bruk: først etter tematikk, så alfabetisk. */
 function bankSanger(){
   return [...DATA.sanger.values()].filter(s=>!s.fjernes)
-    .sort((a,b)=>a.tittel.localeCompare(b.tittel,'nb'));
+    .sort((a,b)=> temaRang(a.kategori)-temaRang(b.kategori)
+               || a.tittel.localeCompare(b.tittel,'nb'));
 }
 function tegnBank(){
   const fT=document.getElementById('b-tema').value;
