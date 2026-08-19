@@ -100,6 +100,23 @@ ol.sanger li:last-child{border-bottom:0}
 .filer{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--grus);margin-top:5px}
 .filer a{color:var(--kull);font-weight:600;text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
 
+/* sangbank */
+table.bank{width:100%;border-collapse:collapse;font-size:14px}
+table.bank th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--grus);font-weight:600;padding:12px 10px;border-bottom:1px solid var(--strek)}
+table.bank td{padding:11px 10px;border-bottom:1px solid var(--strek);vertical-align:top}
+table.bank tr:last-child td{border-bottom:0}
+table.bank .btittel{font-weight:600;min-width:150px}
+table.bank .tom{color:#bdbab0}
+table.bank .filer{margin:0;gap:4px 12px;font-size:12.5px}
+@media (max-width:700px){
+  table.bank thead{position:absolute;left:-9999px}
+  table.bank tr{display:block;padding:13px 0;border-bottom:1px solid var(--strek)}
+  table.bank td{display:flex;gap:10px;padding:2px 16px;border:0}
+  table.bank .btittel{display:block;font-size:15.5px;padding-bottom:5px}
+  table.bank td[data-nok]::before{content:attr(data-nok);flex:0 0 76px;font-size:10.5px;
+    text-transform:uppercase;letter-spacing:.08em;color:var(--grus);padding-top:3px}
+}
 .tilstand{padding:30px 16px;text-align:center;color:var(--grus);font-size:14px}
 .varsel{background:var(--rust-lys);border-left:3px solid var(--rust);color:var(--rust);
   padding:13px 15px;font-size:13.5px;line-height:1.6;margin-bottom:16px}
@@ -129,6 +146,7 @@ footer{background:var(--kull);color:#a5a296;font-size:12.5px;line-height:1.6}
   <nav>
     <button id="tab-who" class="on">Hvem spiller</button>
     <button id="tab-set">Set-liste</button>
+    <button id="tab-bank">Sangbank</button>
   </nav>
 </header>
 
@@ -174,6 +192,26 @@ footer{background:var(--kull);color:#a5a296;font-size:12.5px;line-height:1.6}
     <button class="nullstill" id="nullstill">Nullstill filtre</button>
     <p class="treff" id="treff"></p>
     <div id="setlist"><div class="tilstand">Henter data …</div></div>
+  </section>
+
+  <section id="view-bank" class="skjult">
+    <div class="filtre">
+      <div class="felt">
+        <label for="b-tema">Tematikk</label>
+        <select id="b-tema"><option value="">alle</option></select>
+      </div>
+      <div class="felt">
+        <label for="b-sprak">Språk</label>
+        <select id="b-sprak"><option value="">alle</option></select>
+      </div>
+      <div class="felt">
+        <label for="b-uttrykk">Uttrykk</label>
+        <select id="b-uttrykk"><option value="">alle</option></select>
+      </div>
+    </div>
+    <button class="nullstill" id="b-nullstill">Nullstill filtre</button>
+    <p class="treff" id="b-treff"></p>
+    <div id="banklist"><div class="tilstand">Henter data …</div></div>
   </section>
 </main>
 
@@ -325,14 +363,21 @@ function kolonner(head, navn){
 }
 function byggSangbank(rows){
   const k = kolonner(rows[0]||[], {tittel:['sang'], tekst:['sangtekst'],
-    blekke:['blekke'], toneart:['toneart'], tempo:['tempo']});
+    blekke:['blekke'], toneart:['toneart'], tempo:['tempo'],
+    kategori:['kategori'], sprak:['språk','sprak'], uttrykk:['uttrykk/tempo/driv','uttrykk']});
   if(k.tittel<0) return;
   const les=(r,i)=>i>-1 ? (r[i]||'').trim() : '';
+  /* Arket har en skillerad der kolonne A bare sier «Fjernes». Alt under den
+     er sanger som er tatt ut av repertoaret — de holdes utenfor Sangbank-fanen,
+     men beholdes i oppslaget så gamle set-lister fortsatt finner blekka. */
+  let ute=false;
   for(const r of rows.slice(1)){
+    if(les(r,k.kategori).toLowerCase()==='fjernes'){ ute=true; continue; }
     const tittel=les(r,k.tittel); if(!tittel) continue;
-    DATA.sanger.set(normTitle(tittel),{tittel,
+    DATA.sanger.set(normTitle(tittel),{tittel, fjernes:ute,
       tekstfil:les(r,k.tekst), blekkefil:les(r,k.blekke),
-      toneart:les(r,k.toneart), tempo:les(r,k.tempo)});
+      toneart:les(r,k.toneart), tempo:les(r,k.tempo),
+      kategori:les(r,k.kategori), sprak:les(r,k.sprak), uttrykk:les(r,k.uttrykk)});
   }
 }
 function byggSangvalg(rows){
@@ -462,8 +507,8 @@ const spillerPa = (iso,f) => {
 };
 /* De tre teamlederne. Navnet deres settes i fet skrift der de spiller,
    slik at det er tydelig hvem som leder søndagen. */
-/* Datofilteret har en ekstra verdi ved siden av de faktiske datoene:
-   VIKAR viser alle sondager der bandet mangler noe. */
+/* Datofilteret har én ekstra verdi ved siden av de faktiske datoene:
+   VIKAR viser alle søndager der bandet mangler noe. */
 const VIKAR = '__vikar';
 const passerDato = (iso, valg) =>
   !valg ? true : valg===VIKAR ? sondagInfo(iso).behov.length>0 : iso===valg;
@@ -642,6 +687,44 @@ function tegnSetliste(){
   }
 }
 
+/* =========================================================== SANGBANK ===== */
+/** Sangene som fortsatt er i bruk, sortert på tittel. */
+function bankSanger(){
+  return [...DATA.sanger.values()].filter(s=>!s.fjernes)
+    .sort((a,b)=>a.tittel.localeCompare(b.tittel,'nb'));
+}
+function tegnBank(){
+  const fT=document.getElementById('b-tema').value;
+  const fS=document.getElementById('b-sprak').value;
+  const fU=document.getElementById('b-uttrykk').value;
+  const alle=bankSanger();
+  const treff=alle.filter(s=>
+    (!fT || s.kategori===fT) && (!fS || s.sprak===fS) && (!fU || s.uttrykk===fU));
+  document.getElementById('b-treff').textContent =
+    treff.length===alle.length ? `${alle.length} sanger`
+                               : `${treff.length} av ${alle.length} sanger`;
+  const el=document.getElementById('banklist');
+  if(!treff.length){ el.innerHTML=`<div class="kort"><div class="tilstand">Ingen sanger passer filtrene.</div></div>`; return; }
+  const celle=(nok,verdi)=>`<td data-nok="${nok}">${verdi||'<span class="tom">—</span>'}</td>`;
+  el.innerHTML=`<div class="kort"><table class="bank">
+    <thead><tr><th>Tittel</th><th>Tematikk</th><th>Språk</th><th>Uttrykk</th>
+      <th>Toneart</th><th>Tempo</th><th>Filer</th></tr></thead><tbody>`
+    + treff.map(s=>{
+        const filer=[ s.tekstfil?fil(s.tekstfil,'tekst','Sangtekst'):'',
+                      s.blekkefil?fil(s.blekkefil,'blekke','Blekke'):'' ].filter(Boolean).join('');
+        return `<tr>
+          <td class="btittel">${esc(s.tittel)}</td>
+          ${celle('Tematikk',esc(s.kategori))}
+          ${celle('Språk',esc(s.sprak))}
+          ${celle('Uttrykk',esc(s.uttrykk))}
+          ${celle('Toneart',esc(s.toneart))}
+          ${celle('Tempo',s.tempo?esc(s.tempo):'')}
+          <td data-nok="Filer"><div class="filer">${filer||'<span class="tom">—</span>'}</div></td>
+        </tr>`;
+      }).join('')
+    + `</tbody></table></div>`;
+}
+
 /* ============================================================ FILTRE ===== */
 function fyllFiltre(){
   const pers=allePersoner();
@@ -665,6 +748,14 @@ function fyllFiltre(){
   };
   kobl(['w-dato','w-team','w-musiker'], tegnHvem,     'w-nullstill');
   kobl(['f-dato','f-team','f-medlem'],  tegnSetliste, 'nullstill');
+
+  /* Sangbanken filtreres på verdiene som faktisk finnes i arket. */
+  const unike = felt => [...new Set(bankSanger().map(s=>s[felt]).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,'nb')).map(v=>[v,v]);
+  fyll('b-tema',    unike('kategori'));
+  fyll('b-sprak',   unike('sprak'));
+  fyll('b-uttrykk', unike('uttrykk'));
+  kobl(['b-tema','b-sprak','b-uttrykk'], tegnBank, 'b-nullstill');
 }
 
 /* ============================================================= START ===== */
@@ -695,9 +786,10 @@ async function start(){
   fyllFiltre();
   tegnHvem();
   tegnSetliste();
+  tegnBank();
 }
 
-const FANER=[['tab-who','view-who'],['tab-set','view-set']];
+const FANER=[['tab-who','view-who'],['tab-set','view-set'],['tab-bank','view-bank']];
 FANER.forEach(([knapp,visning])=>{
   document.getElementById(knapp).onclick=()=>{
     FANER.forEach(([k,v])=>{
