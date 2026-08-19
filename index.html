@@ -101,18 +101,29 @@ ol.sanger li:last-child{border-bottom:0}
 .filer a{color:var(--kull);font-weight:600;text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
 
 /* sangbank */
-table.bank{width:100%;border-collapse:collapse;font-size:14px}
+table.bank{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed}
+col.k-tittel{width:31%} col.k-tema{width:15%} col.k-sprak{width:8%}
+col.k-tone{width:8%}    col.k-tempo{width:7%} col.k-filer{width:31%}
 table.bank th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;
   color:var(--grus);font-weight:600;padding:12px 10px;border-bottom:1px solid var(--strek)}
-table.bank td{padding:11px 10px;border-bottom:1px solid var(--strek);vertical-align:top}
+table.bank td{padding:0 10px;height:44px;border-bottom:1px solid var(--strek);
+  vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 table.bank tr:last-child td{border-bottom:0}
-table.bank .btittel{font-weight:600;min-width:150px}
+table.bank .btittel{font-weight:600}
 table.bank .tom{color:#bdbab0}
-table.bank .filer{margin:0;gap:4px 12px;font-size:12.5px}
+table.bank .filer{display:flex;flex-wrap:nowrap;margin:0;gap:14px;font-size:12.5px}
+table.bank .filer a{white-space:nowrap}
+.spot{display:inline-flex;align-items:center;gap:5px;color:#1a7d4b;font-weight:600;
+  text-decoration:none;white-space:nowrap}
+.spot:hover{color:#15633b;text-decoration:underline;text-underline-offset:2px}
+.spot svg{flex:0 0 auto}
 @media (max-width:700px){
+  table.bank{table-layout:auto}
   table.bank thead{position:absolute;left:-9999px}
   table.bank tr{display:block;padding:13px 0;border-bottom:1px solid var(--strek)}
-  table.bank td{display:flex;gap:10px;padding:2px 16px;border:0}
+  table.bank td{display:flex;gap:10px;padding:2px 16px;border:0;height:auto;
+    white-space:normal;overflow:visible}
+  table.bank .filer{flex-wrap:wrap;gap:6px 14px}
   table.bank .btittel{display:block;font-size:15.5px;padding-bottom:5px}
   table.bank td[data-nok]::before{content:attr(data-nok);flex:0 0 76px;font-size:10.5px;
     text-transform:uppercase;letter-spacing:.08em;color:var(--grus);padding-top:3px}
@@ -364,7 +375,8 @@ function kolonner(head, navn){
 function byggSangbank(rows){
   const k = kolonner(rows[0]||[], {tittel:['sang'], tekst:['sangtekst'],
     blekke:['blekke'], toneart:['toneart'], tempo:['tempo'],
-    kategori:['kategori'], sprak:['språk','sprak'], uttrykk:['uttrykk/tempo/driv','uttrykk']});
+    kategori:['kategori'], sprak:['språk','sprak'], uttrykk:['uttrykk/tempo/driv','uttrykk'],
+    spotify:['spotify','spotifylenke']});
   if(k.tittel<0) return;
   const les=(r,i)=>i>-1 ? (r[i]||'').trim() : '';
   /* Arket har en skillerad der kolonne A bare sier «Fjernes». Alt under den
@@ -377,7 +389,8 @@ function byggSangbank(rows){
     DATA.sanger.set(normTitle(tittel),{tittel, fjernes:ute,
       tekstfil:les(r,k.tekst), blekkefil:les(r,k.blekke),
       toneart:les(r,k.toneart), tempo:les(r,k.tempo),
-      kategori:les(r,k.kategori), sprak:les(r,k.sprak), uttrykk:les(r,k.uttrykk)});
+      kategori:les(r,k.kategori), sprak:les(r,k.sprak), uttrykk:les(r,k.uttrykk),
+      spotify:les(r,k.spotify)});
   }
 }
 function byggSangvalg(rows){
@@ -697,6 +710,22 @@ const temaRang = k => {
   const i=TEMAREKKE.findIndex(t=>s.startsWith(t));
   return i<0 ? TEMAREKKE.length : i;
 };
+/* Spotify: bruker lenka fra arket hvis den finnes. Står kolonnen tom,
+   sendes du til et søk på tittelen i stedet — da virker knappen uansett. */
+const SPOTIFY_MERKE = '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">'
+  + '<circle cx="12" cy="12" r="12" fill="currentColor"/>'
+  + '<g fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round">'
+  + '<path d="M6.3 8.6c3.7-1 7.8-.7 11.2 1"/><path d="M7 12c3-.8 6.3-.5 9 .8"/>'
+  + '<path d="M7.8 15.2c2.4-.6 5-.4 7.2.7"/></g></svg>';
+function spotifyUrl(s){
+  const l=(s.spotify||'').trim();
+  if(/^https?:\/\//i.test(l)) return l;
+  return 'https://open.spotify.com/search/' + encodeURIComponent(s.tittel);
+}
+const spotifyKnapp = s =>
+  `<a class="spot" href="${spotifyUrl(s)}" target="_blank" rel="noopener"
+      title="Hør ${esc(s.tittel)} på Spotify">${SPOTIFY_MERKE}<span>Spotify</span></a>`;
+
 /** Sangene som fortsatt er i bruk: først etter tematikk, så alfabetisk. */
 function bankSanger(){
   return [...DATA.sanger.values()].filter(s=>!s.fjernes)
@@ -717,16 +746,18 @@ function tegnBank(){
   if(!treff.length){ el.innerHTML=`<div class="kort"><div class="tilstand">Ingen sanger passer filtrene.</div></div>`; return; }
   const celle=(nok,verdi)=>`<td data-nok="${nok}">${verdi||'<span class="tom">—</span>'}</td>`;
   el.innerHTML=`<div class="kort"><table class="bank">
-    <thead><tr><th>Tittel</th><th>Tematikk</th><th>Språk</th><th>Uttrykk</th>
+    <colgroup><col class="k-tittel"><col class="k-tema"><col class="k-sprak">
+      <col class="k-tone"><col class="k-tempo"><col class="k-filer"></colgroup>
+    <thead><tr><th>Tittel</th><th>Tematikk</th><th>Språk</th>
       <th>Toneart</th><th>Tempo</th><th>Filer</th></tr></thead><tbody>`
     + treff.map(s=>{
         const filer=[ s.tekstfil?fil(s.tekstfil,'tekst','Sangtekst'):'',
-                      s.blekkefil?fil(s.blekkefil,'blekke','Blekke'):'' ].filter(Boolean).join('');
+                      s.blekkefil?fil(s.blekkefil,'blekke','Blekke'):'',
+                      spotifyKnapp(s) ].filter(Boolean).join('');
         return `<tr>
           <td class="btittel">${esc(s.tittel)}</td>
           ${celle('Tematikk',esc(s.kategori))}
           ${celle('Språk',esc(s.sprak))}
-          ${celle('Uttrykk',esc(s.uttrykk))}
           ${celle('Toneart',esc(s.toneart))}
           ${celle('Tempo',s.tempo?esc(s.tempo):'')}
           <td data-nok="Filer"><div class="filer">${filer||'<span class="tom">—</span>'}</div></td>
