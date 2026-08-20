@@ -117,6 +117,8 @@ table.bank .filer a{white-space:nowrap}
   text-decoration:none;white-space:nowrap}
 .spot:hover{color:#15633b;text-decoration:underline;text-underline-offset:2px}
 .spot svg{flex:0 0 auto}
+.spilleliste{margin:6px 0 4px}
+.spilleliste iframe{display:block;width:100%;height:352px;border:0;border-radius:12px}
 @media (max-width:700px){
   table.bank{table-layout:auto}
   table.bank thead{position:absolute;left:-9999px}
@@ -223,6 +225,14 @@ footer{background:var(--kull);color:#a5a296;font-size:12.5px;line-height:1.6}
     <button class="nullstill" id="b-nullstill">Nullstill filtre</button>
     <p class="treff" id="b-treff"></p>
     <div id="banklist"><div class="tilstand">Henter data …</div></div>
+
+    <h3 class="etikett">Hele repertoaret på Spotify</h3>
+    <div class="spilleliste">
+      <iframe src="https://open.spotify.com/embed/playlist/2mTm3u0flEXnTuaW1jQbfV?utm_source=generator"
+              title="Sangbank Vitalkirken på Spotify" loading="lazy" frameborder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              allowfullscreen></iframe>
+    </div>
   </section>
 </main>
 
